@@ -99,22 +99,22 @@ def Phi(v, v_half=-45., slope=2.):
     return 1/(1 + np.exp(-(v-v_half)/slope))
 
 # Total number of neurons in the network
-N = 1000
+N = 200
 
 # Seed the random number generator
-np.random.seed(0)
+np.random.seed(1000)
 
-# Create N GL neurons (membrane potential) with initial conditions with a normal distribution
+# Create N u neurons (membrane potential) with initial conditions with a normal distribution
 # with mean V0_mean and standard deviation V0_sd
-GL = net_dict['neuron_params']['V0_sd']*np.random.randn(N) + net_dict['neuron_params']['V0_mean']
+u = net_dict['neuron_params']['V0_sd']*np.random.randn(N) + net_dict['neuron_params']['V0_mean']
 
 # Create connection
 # all to all
 
 # Simulation time in miliseconds
-t_end = 1.0e1
+t_end = 1.0e3
 
-# Synaptic weight
+# Synaptic weight [mV]
 W_e = 0.15  # excitatory
 g = 4  # inhibitory/excitatory ration
 W_i = -g*W_e  # inhibitory
@@ -123,11 +123,14 @@ t = 0.0
 
 V_reset = net_dict['neuron_params']['V_reset']
 
-st = pd.DataFrame(columns=['i', 't', 'V_m']).astype({'i':'int', 't':'float', 'V_m':'float'})
+#st = pd.DataFrame(columns=['i', 't', 'V_m']).astype({'i':'int', 't':'float', 'V_m':'float'})
+
+idx = []
+t_spk = []
 
 while(t < t_end):
     # Calculate all Phi(v)
-    PHI = Phi(GL)
+    PHI = Phi(u)
     # Calculate sum of all Phi(v)
     S_PHI = np.sum(PHI)
     # Calculate cumulative sum of all Phi(v)
@@ -135,35 +138,43 @@ while(t < t_end):
     # Calculate dt
     dt = -np.log(np.random.rand())/S_PHI
     # Calculate leak rate
-    dGL = np.exp(-dt/net_dict['neuron_params']['tau_m'])
+    du = np.exp(-dt/net_dict['neuron_params']['tau_m'])
     # Update u for all neurons
-    GL = dGL*(GL - net_dict['neuron_params']['V_reset']) + net_dict['neuron_params']['V_reset']
+    u = du*(u - net_dict['neuron_params']['V_reset']) + net_dict['neuron_params']['V_reset']
     # Draw a uniform number to determine which neuron fires
     s = np.random.uniform(0.0, S_PHI)
     # Calculate updated values of Phi(v)
-    NEW_PHI = Phi(GL)
+    NEW_PHI = Phi(u)
     S_NEW_PHI = np.sum(NEW_PHI)
     CS_NEW_PHI = np.cumsum(NEW_PHI)
 
-    # Condition where a neuron fired (except neuron 0)
-    if any(CS_NEW_PHI <= s) & any(CS_NEW_PHI > s):
-        i = np.where(CS_NEW_PHI == CS_NEW_PHI[CS_NEW_PHI > s][0])[0][0]
-    # Condition where neuron 0 fired
-    elif s < CS_NEW_PHI[0]:
-        i=0
-    # Condition where no neuron fired
-    else:
-        i = np.NaN
-    
     # update time
     t += dt
-    # update u 
-    st = st.append({'i':i, 't':t, 'V_m':GL[i]}, ignore_index=True).astype({'i':'int'})
 
-    if not(np.isnan(i)):
-#        print(t, i, GL[i])
+    # Condition where a neuron fired (except neuron 0)
+    if s < CS_NEW_PHI[-1]:
+        # Determine neuron 
+        i = np.where(CS_NEW_PHI > s)[0][0]
+        # Store spike time 
+#        st = st.append({'i':i, 't':t, 'V_m':u[i]}, ignore_index=True).astype({'i':'int'})
+        idx.append(i)
+        t_spk.append(t)
         # Increment all u by W_e
-        GL += W_e
+        u += W_e
         # Reset u of the neuron that fired
-        GL[i] = net_dict['neuron_params']['V_reset']
+        u[i] = net_dict['neuron_params']['V_reset']
+    # Condition where no neuron fired
+#    else:
+#        i = np.NaN
     
+
+#    if not(np.isnan(i)):
+#    if i:
+#        print(t, i, u[i])
+#        # Increment all u by W_e
+#        u += W_e
+#        # Reset u of the neuron that fired
+#        u[i] = net_dict['neuron_params']['V_reset']
+    
+
+plt.plot(t_spk, idx, ' .')
