@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.sparse import coo_matrix
+from   scipy.sparse import coo_matrix
 
 #phi function
 def phi(u, v_half, slope):
