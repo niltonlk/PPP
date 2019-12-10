@@ -83,34 +83,9 @@ np.random.seed(1000)    #seed for the random number generator
 #-----------------------------------------------------------------------------
 #random network 80% excitatory and 20% inhibitory:
 #-----------------------------------------------------------------------------
-Nexc = int(N*0.8)   #number of excitatory neurons
-Nin = int(N-Nexc)   #number of inhibitory neurons
-
-p = 0.01                    #probability of connection
-Nconn_exc = int(p*Nexc*N)   #number of connections from excitatory neurons to all
-Nconn_in = int(p*Nin*N)     #number of connections from inhibitory neurons to all
-
-#list of pre (excitatory) and post-synaptic neurons connected; and list of synaptic weights
-pre_list_exc  = np.random.randint(low=0.0, high=N-1, size=Nconn_exc)
-post_list_exc  = np.random.randint(low=0.0, high=N-1, size=Nconn_exc)
-syn_weight_exc = np.ones(Nconn_exc)*w
-
-#list of pre (inhibitory) and post-synaptic neurons connected; and list of synaptic weights
-pre_list_in  = np.random.randint(low=0.0, high=N-1, size=Nconn_in)
-post_list_in  = np.random.randint(low=0.0, high=N-1, size=Nconn_in)
-syn_weight_in = -np.ones(Nconn_in)*w
-
-#concatenation of the lists defined above
-pre_list = np.concatenate((pre_list_exc, pre_list_in))
-post_list = np.concatenate((post_list_exc, post_list_in))
-syn_weight_list = np.concatenate((syn_weight_exc, syn_weight_in))
-
-#syn_weight is the matrix with all connections and synaptic weights
-syn_weight = coo_matrix((syn_weight_list, (pre_list, post_list)), shape=(N, N)).toarray()
-del pre_list, pre_list_exc, pre_list_in, post_list_exc, post_list_in, \
-    syn_weight_list, syn_weight_exc, syn_weight_in
+conn_mat = np.load('graph/brunel_seed_'+str(s)+'.npy', allow_pickle=True).item()
 
 #-----------------------------------------------------------------------------
 # running simulation
 #-----------------------------------------------------------------------------
-evaluate(params, syn_weight, sim_params)
+evaluate(params, conn_mat.toarray(), sim_params)
