@@ -1,8 +1,4 @@
-import pandas                           as pd
-from   brian2                           import *
-from   scipy.integrate                  import simps
-from   scipy.stats                      import ks_2samp
-from   scipy.signal                     import hilbert
+import numpy as np
 
 def fixed_indegree(Ce, Ci, Nexct, Ninhb, W, g):
     pre_ex  = np.random.uniform(0, Nexct, Ce*(Nexct+Ninhb))

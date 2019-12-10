@@ -7,13 +7,15 @@ from   set_params        import *
 #phi function
 def phi(u, v_half, slope):
     #return 1.0/(1.0+np.exp(-(u-v_half)/slope))
-    return (1/27.07) * exp((u-v_half)/slope) + 1e-4
+    # return (1/27.07) * np.exp((u-v_half)/slope) + 1e-4
+    return (slope*u + 0.05)
+
 #-----------------------------------------------------------------------------
 #function to evaluate the model
 #-----------------------------------------------------------------------------
 def evaluate(neuron_params, syn_weight, sim_params):
     #initial conditions
-    u = np.random.uniform(0.0, 10.0, size=neuron_params['N'] )
+    u = np.random.uniform(0.0, 1.0, size=neuron_params['N'] )
     phi_u = np.zeros(N)          #array to store phi values
 
     #array to store spikes
@@ -23,11 +25,13 @@ def evaluate(neuron_params, syn_weight, sim_params):
     trun = 0.0
     while (trun < Tsim):
         #compute phi(T-dt)
-        phi_u = phi(u, v_half, slope)
+        phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
         phi_u[phi_u>1] = 1
+        phi_u[phi_u<0] = 0
         S = np.sum(phi_u)
         unif = np.random.rand()
         dt = -np.log(unif)/S;
+
         #compute u(T)
         u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest']
 
@@ -51,7 +55,7 @@ def evaluate(neuron_params, syn_weight, sim_params):
 
     plt.plot(spk_t,spk_id, '.')
 
-    print(len(spk_t)/N)
+    print(len(spk_t)/N/Tsim)
 
     #plt.show()
 
