@@ -17,7 +17,7 @@ g     = 4.0
 N     = 12500
 Nexct = int(f * N)
 Ninhb = N-Nexct#int((1-f) * N)
-w_ex  = 0.2 # mV
+w_ex  = 0.1 # mV
 w_in  = -g * w_ex
 #delay = 1.5 * ms
 Ce    = 1000
@@ -27,7 +27,7 @@ r'''
 	Simulation Parameters
 '''
 s    = 1
-Tsim = 1.0
+Tsim = 2.0
 #simulation parameters
 sim_params = {'ttotal': Tsim}
 

@@ -8,7 +8,7 @@ from   set_params        import *
 def phi(u, v_half, slope):
     #return 1.0/(1.0+np.exp(-(u-v_half)/slope))
     # return (1/27.07) * np.exp((u-v_half)/slope) + 1e-4
-    return (slope*u + 0.05)
+    return (slope*u+0.01)
 
 #-----------------------------------------------------------------------------
 #function to evaluate the model
@@ -21,6 +21,8 @@ def evaluate(neuron_params, syn_weight, sim_params):
     #array to store spikes
     spk_t = []
     spk_id = []
+
+    usum = []
 
     trun = 0.0
     while (trun < Tsim):
@@ -53,11 +55,10 @@ def evaluate(neuron_params, syn_weight, sim_params):
             spk_t.append(trun)
             spk_id.append(neuron_id)
 
+            usum.append(np.mean(u))
+
     plt.plot(spk_t,spk_id, '.')
-
     print(len(spk_t)/N/Tsim)
-
-    #plt.show()
 
 #-----------------------------------------------------------------------------
 #parameters
@@ -70,6 +71,7 @@ np.random.seed(s)    #seed for the random number generator
 #conn_mat = np.load('graph/brunel_seed_'+str(1)+'.npy', allow_pickle=True).item()
 from generate_graph import *
 conn_mat = brunel_graph(Ce, Ci, Nexct, Ninhb, w_ex, g, save_graph=False)
+
 #-----------------------------------------------------------------------------
 # running simulation
 #-----------------------------------------------------------------------------
