@@ -23,12 +23,13 @@ w_in  = -g * w_ex
 Ce    = 1000
 Ci    = int( Ce / 4.0 )
 
-
 r'''
 	Simulation Parameters
 '''
 s    = 1
 Tsim = 5000
+#simulation parameters
+sim_params = {'ttotal': Tsim}
 
 r'''
   Neuron Parameters
@@ -40,8 +41,19 @@ r'''
   eqs     : Model equation
   v_ext   : External input frequency
 '''
-tau_m    = 20. # ms
+tau      = 10. # ms (20)
 #tau_ref  =  2. # ms
 Vrest    =  0. # mV
 Vreset   = 10. # mV
 Vth      = 20. # mV
+
+r'''
+	Phi parameters
+'''
+v_half  = -45.0   #phi function parameter
+slope   = 2.0     #phi function parameter
+alpha   = 1/tau
+u_reset = -65.0 #reset potential
+
+#dictionary with phi function parameters
+params = {'N':N, 'v_half':v_half, 'slope':slope, 'alpha':alpha, 'u_reset':u_reset}

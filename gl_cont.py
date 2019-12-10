@@ -1,7 +1,7 @@
-import numpy as np
+import numpy             as np
 import matplotlib.pyplot as plt
-
-from   scipy.sparse import coo_matrix
+from   scipy.sparse      import coo_matrix
+from   set_params        import *
 
 #phi function
 def phi(u, v_half, slope):
@@ -12,7 +12,7 @@ def phi(u, v_half, slope):
 #-----------------------------------------------------------------------------
 def evaluate(neuron_params, syn_weight, sim_params):
     #initial conditions
-    u = np.random.normal(-58.0, 10.0, size=neuron_params['N'])
+    u = np.random.normal(-58.0, 10.0, size=neuron_params['N'] )
     phi_u = np.zeros(N)          #array to store phi values
 
     #array to store spikes
@@ -20,7 +20,7 @@ def evaluate(neuron_params, syn_weight, sim_params):
     spk_id = []
 
     trun = 0.0
-    while (trun < ttotal):
+    while (trun < Tsim):
 
         #compute phi(T-dt)
         phi_u = phi(u, v_half, slope)
@@ -51,41 +51,21 @@ def evaluate(neuron_params, syn_weight, sim_params):
             spk_id.append(neuron_id)
 
     plt.plot(spk_t,spk_id, '.')
-    plt.show()
+    #plt.show()
 
 #-----------------------------------------------------------------------------
 #parameters
 #-----------------------------------------------------------------------------
-N = 1000       #network size
-v_half = -45.0  #phi function parameter
-slope = 2.0     #phi function parameter
-tau = 10.0
-alpha = 1/tau
-u_reset = -65.0 #reset potential
-w = 0.15
-
-#dictionary with phi function parameters
-params = {'N':N, 'v_half':v_half, 'slope':slope, 'alpha':alpha, 'u_reset':u_reset}
-
-#simulation parameters
-ttotal = 1000.0     #total time of simulation in miliseconds
-sim_params = {'ttotal': ttotal}
-
-np.random.seed(1000)    #seed for the random number generator
-
-# definition of graph
-#-----------------------------------------------------------------------------
-#all-to-all:
-#-----------------------------------------------------------------------------
-#synapses
-# syn_weight = np.ones((N,N))*w
+np.random.seed(s)    #seed for the random number generator
 
 #-----------------------------------------------------------------------------
 #random network 80% excitatory and 20% inhibitory:
 #-----------------------------------------------------------------------------
-conn_mat = np.load('graph/brunel_seed_'+str(s)+'.npy', allow_pickle=True).item()
+conn_mat = np.load('graph/brunel_seed_'+str(1)+'.npy', allow_pickle=True).item()
 
 #-----------------------------------------------------------------------------
 # running simulation
 #-----------------------------------------------------------------------------
 evaluate(params, conn_mat.toarray(), sim_params)
+plt.savefig('semarray.png', dpi = 600)
+plt.close()
