@@ -27,7 +27,7 @@ r'''
 	Simulation Parameters
 '''
 s    = 1
-Tsim = 2.0
+Tsim = 10.0
 #simulation parameters
 sim_params = {'ttotal': Tsim}
 

@@ -8,7 +8,10 @@ from   set_params        import *
 def phi(u, v_half, slope):
     #return 1.0/(1.0+np.exp(-(u-v_half)/slope))
     # return (1/27.07) * np.exp((u-v_half)/slope) + 1e-4
-    return (slope*u+0.01)
+    phi_u = slope*u+0.05
+    phi_u[phi_u>1] = 1
+    phi_u[phi_u<0] = 0
+    return phi_u
 
 #-----------------------------------------------------------------------------
 #function to evaluate the model
@@ -28,8 +31,6 @@ def evaluate(neuron_params, syn_weight, sim_params):
     while (trun < Tsim):
         #compute phi(T-dt)
         phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
-        phi_u[phi_u>1] = 1
-        phi_u[phi_u<0] = 0
         S = np.sum(phi_u)
         unif = np.random.rand()
         dt = -np.log(unif)/S;
@@ -57,8 +58,9 @@ def evaluate(neuron_params, syn_weight, sim_params):
 
             usum.append(np.mean(u))
 
-    plt.plot(spk_t,spk_id, '.')
-    print(len(spk_t)/N/Tsim)
+    print(len(spk_t)/N)
+
+    return np.array(spk_t), np.array(spk_id)
 
 #-----------------------------------------------------------------------------
 #parameters
@@ -75,6 +77,11 @@ conn_mat = brunel_graph(Ce, Ci, Nexct, Ninhb, w_ex, g, save_graph=False)
 #-----------------------------------------------------------------------------
 # running simulation
 #-----------------------------------------------------------------------------
-evaluate(params, conn_mat.toarray(), sim_params)
-plt.savefig('array.png', dpi = 600)
-plt.close()
+# evaluate(params, conn_mat.toarray(), sim_params)
+spk_t, spk_id = evaluate(params, conn_mat, sim_params)
+plt.plot(spk_t[spk_id<=10000],spk_id[spk_id<=10000], '.k', markersize=1.0)
+plt.plot(spk_t[spk_id>10000],spk_id[spk_id>10000], '.r', markersize=1.0)
+plt.tight_layout()
+plt.show()
+# plt.savefig('array.png', dpi = 600)
+# plt.close()
