@@ -20,3 +20,8 @@ def brunel_graph(Ce, Ci, Nexct, Ninhb, w_ex, g, save_graph=False):
 		np.save('graph/brunel_seed_'+str(s)+'.npy', conn_mat)
 
 	return conn_mat
+
+def all_to_all(N, w):
+	conn_mat = np.ones((N,N))*w
+
+	return conn_mat

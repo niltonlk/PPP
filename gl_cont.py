@@ -8,7 +8,7 @@ from   set_params        import *
 def phi(u, v_half, slope):
     #return 1.0/(1.0+np.exp(-(u-v_half)/slope))
     # return (1/27.07) * np.exp((u-v_half)/slope) + 1e-4
-    phi_u = slope*u+0.05
+    phi_u = slope*u#+0.1
     phi_u[phi_u>1] = 1
     phi_u[phi_u<0] = 0
     return phi_u
@@ -36,7 +36,7 @@ def evaluate(neuron_params, syn_weight, sim_params):
         dt = -np.log(unif)/S;
 
         #compute u(T)
-        u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest']
+        u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest'] + 0.01
 
         #compute phi(T)
         phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
@@ -70,17 +70,18 @@ np.random.seed(s)    #seed for the random number generator
 #-----------------------------------------------------------------------------
 #random network 80% excitatory and 20% inhibitory:
 #-----------------------------------------------------------------------------
-#conn_mat = np.load('graph/brunel_seed_'+str(1)+'.npy', allow_pickle=True).item()
 from generate_graph import *
-conn_mat = brunel_graph(Ce, Ci, Nexct, Ninhb, w_ex, g, save_graph=False)
+# syn_weight = brunel_graph(Ce, Ci, Nexct, Ninhb, w_ex, g, save_graph=False)
+
+syn_weight = all_to_all(N, w)
 
 #-----------------------------------------------------------------------------
 # running simulation
 #-----------------------------------------------------------------------------
-# evaluate(params, conn_mat.toarray(), sim_params)
-spk_t, spk_id = evaluate(params, conn_mat, sim_params)
-plt.plot(spk_t[spk_id<=10000],spk_id[spk_id<=10000], '.k', markersize=1.0)
-plt.plot(spk_t[spk_id>10000],spk_id[spk_id>10000], '.r', markersize=1.0)
+spk_t, spk_id = evaluate(params, syn_weight, sim_params)
+plt.plot(spk_t, spk_id, '.k', markersize=1.0)
+# plt.plot(spk_t[spk_id<=10000],spk_id[spk_id<=10000], '.k', markersize=1.0)
+# plt.plot(spk_t[spk_id>10000],spk_id[spk_id>10000], '.r', markersize=1.0)
 plt.tight_layout()
 plt.show()
 # plt.savefig('array.png', dpi = 600)
