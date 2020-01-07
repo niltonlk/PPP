@@ -1,7 +1,9 @@
 #############################################################################
 # Set Network and neuron parameters
 #############################################################################
-N = 1000    # number of neurons
+N = 1000    #number of neurons
+
+Iext = 0.01 #external constant current
 
 r'''
     Network Parameters
