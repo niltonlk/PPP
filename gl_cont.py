@@ -76,9 +76,13 @@ from generate_graph import *
 syn_weight = all_to_all(N, w)
 
 #-----------------------------------------------------------------------------
-# running simulation
+#running simulation
 #-----------------------------------------------------------------------------
 spk_t, spk_id = evaluate(params, syn_weight, sim_params)
+
+#-----------------------------------------------------------------------------
+#plot graph
+#-----------------------------------------------------------------------------
 plt.plot(spk_t, spk_id, '.k', markersize=1.0)
 # plt.plot(spk_t[spk_id<=10000],spk_id[spk_id<=10000], '.k', markersize=1.0)
 # plt.plot(spk_t[spk_id>10000],spk_id[spk_id>10000], '.r', markersize=1.0)
