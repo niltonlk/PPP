@@ -36,7 +36,7 @@ def evaluate(neuron_params, syn_weight, sim_params):
         dt = -np.log(unif)/S;
 
         #compute u(T)
-        u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest'] + 0.01
+        u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest'] + Iext
 
         #compute phi(T)
         phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
