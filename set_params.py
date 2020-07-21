@@ -3,8 +3,6 @@
 #############################################################################
 N = 1000    #number of neurons
 
-Iext = 0.01 #external constant current
-
 r'''
     Network Parameters
     f : Fraction of excitatory neurons
@@ -27,13 +25,13 @@ Ci    = int( Ce / 4.0 )
 r'''
 	All-to-all
 '''
-w = 0.04
+w = 0.01
 
 r'''
 	Simulation Parameters
 '''
 s    = 1
-Tsim = 10.0
+Tsim = 100.0
 #simulation parameters
 sim_params = {'ttotal': Tsim}
 
@@ -46,8 +44,9 @@ r'''
   Vth     : Threshold
   eqs     : Model equation
   v_ext   : External input frequency
-'''
-tau      = 0.020 # ms (20)
+ '''
+# tau      = 0.020 # ms (20)
+# tau_syn  = 0.010
 #tau_ref  =  2. # ms
 #Vrest    =  0. # mV
 #Vreset   = 10. # mV
@@ -56,11 +55,44 @@ tau      = 0.020 # ms (20)
 r'''
 	Phi parameters
 '''
-v_half  = 20.0   #phi function parameter
-slope   = 1.0      #phi function parameter
-alpha   = 1.0/tau
-u_rest  = 0
-u_reset = 0.0 #reset potential
+# v_half  = 20.0   #phi function parameter
+# slope   = 1.0      #phi function parameter
+# alpha   = 1.0/tau
+# beta    = 1.0/tau_syn
+# u_rest  = 0
+# u_reset = 0.0 #reset potential
 
-#dictionary with phi function parameters
-params = {'N':N, 'v_half':v_half, 'slope':slope, 'alpha':alpha, 'u_reset':u_reset, 'u_rest': u_rest}
+
+
+#############################################################################
+# Neuron parameters
+#############################################################################
+tau_m       = 10.0  # membrane time constant in (ms)
+t_ref       = 2.0   # refractory period in (ms)
+V_reset     = 0.0   # reset membrane potential in (mV)
+V_rest      = 0.0   # resting membrane potential (mV)
+
+#############################################################################
+# Synapse parameters
+#############################################################################
+tau_syn_ex  = 0.5 # excitatory synaptic time constant in (ms)
+tau_syn_in  = 0.5 # inhibitory synaptic time constant in (ms)
+beta_ex     = 1.0/tau_syn_ex
+beta_in     = 1.0/tau_syn_in
+beta        = beta_ex
+
+I_ext       = 100.0 # constant current in (pA)
+
+#############################################################################
+# Phi parameters
+#############################################################################
+alpha       = 1.0/tau_m
+gamma       = 0.1           # slope of the firing probability funtion in (1/mV)
+r           = 0.4           # curvature of the firing probability function (unitless)
+V_rheo      = 15.0          # rheobase potential, potential in which firing probability becomes > 0 in (mV)
+
+#############################################################################
+# Poisson background parameters
+#############################################################################
+poisson_rate = 8.0*10 # rate of poisson spike input in (Hz)
+poisson_weight = 87.8 # weight of poisson input in (pA)

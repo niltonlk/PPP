@@ -1,45 +1,54 @@
 import numpy             as np
 import matplotlib.pyplot as plt
-from   scipy.sparse      import coo_matrix
 from   set_params        import *
 
 
 #phi function
-def phi(u, v_half, slope):
-    #return 1.0/(1.0+np.exp(-(u-v_half)/slope))
-    # return (1/27.07) * np.exp((u-v_half)/slope) + 1e-4
-    phi_u = slope*u#+0.1
+'''def phi(V, v_half, slope):
+    #return 1.0/(1.0+np.exp(-(V-v_half)/slope))
+    # return (1/27.07) * np.exp((V-v_half)/slope) + 1e-4
+    phi_u = slope*V#+0.1
     phi_u[phi_u>1] = 1
     phi_u[phi_u<0] = 0
+    return phi_u'''
+
+def phi(V, gamma, r):
+    V_diff = V - V_rheo
+    idx_neg = np.where(V_diff < 0)
+    V_diff[idx_neg] = 0.0
+    phi_u = (np.power(gamma * V_diff, r))*10.0
+    # Phi in kHz - divided by 0.1
+    # phi_u[phi_u<0] = 0
     return phi_u
 
 #-----------------------------------------------------------------------------
 #function to evaluate the model
 #-----------------------------------------------------------------------------
-def evaluate(neuron_params, syn_weight, sim_params):
+def evaluate(syn_weight, sim_params):
     #initial conditions
-    u = np.random.uniform(0.0, 1.0, size=neuron_params['N'] )
+    V = np.random.uniform(0.0, V_rheo+1.0, size=N )
     phi_u = np.zeros(N)          #array to store phi values
+    I_syn = np.zeros(N)          #array to store synaptic current values
 
     #array to store spikes
     spk_t = []
     spk_id = []
 
-    usum = []
-
     trun = 0.0
     while (trun < Tsim):
         #compute phi(T-dt)
-        phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
+        phi_u = phi(V, gamma, r)
         S = np.sum(phi_u)
         unif = np.random.rand()
         dt = -np.log(unif)/S;
 
-        #compute u(T)
-        u = (u-neuron_params['u_rest'])*np.exp(-alpha*dt) + neuron_params['u_rest'] + Iext
+        # compute I
+        I_syn = I_syn*np.exp(-beta*dt)
+        #compute V(T)
+        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
 
         #compute phi(T)
-        phi_u = phi(u, neuron_params['v_half'], neuron_params['slope'])
+        phi_u = phi(V, gamma, r)
 
         unif = np.random.uniform(low=0.0, high=S)
 
@@ -47,16 +56,16 @@ def evaluate(neuron_params, syn_weight, sim_params):
         trun += dt
 
         if unif <= S_new:
+            print(trun)
             phi_cumsum = np.cumsum(phi_u)
             neuron_id = np.where(unif<=phi_cumsum)[0][0]
 
-            u += syn_weight[neuron_id][:]
-            u[neuron_id] = neuron_params['u_reset']
+            I_syn += syn_weight[neuron_id][:]
+            V += syn_weight[neuron_id][:]
+            V[neuron_id] = V_reset
 
             spk_t.append(trun)
             spk_id.append(neuron_id)
-
-            usum.append(np.mean(u))
 
     print(len(spk_t)/N)
 
@@ -78,7 +87,7 @@ syn_weight = all_to_all(N, w)
 #-----------------------------------------------------------------------------
 #running simulation
 #-----------------------------------------------------------------------------
-spk_t, spk_id = evaluate(params, syn_weight, sim_params)
+spk_t, spk_id = evaluate(syn_weight, sim_params)
 
 #-----------------------------------------------------------------------------
 #plot graph
