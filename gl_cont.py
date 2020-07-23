@@ -1,7 +1,5 @@
-#!/usr/bin/env pypy
-
 import numpy             as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from   set_params        import *
 import time
 
@@ -67,13 +65,9 @@ def evaluate(post_list):
 
                 # updating of postsynaptic currents:
                 I_syn[post_list[neuron_id][0]] += post_list[neuron_id][1]
-                # I_syn += post_list[neuron_id][:] # when using matrix notation
-                # I_syn[post_list.rows[neuron_id]] += post_list.data[neuron_id] # when using lil sparse matrix
 
                 # updating of postsynaptic potentials:
                 V[post_list[neuron_id][0]] += post_list[neuron_id][1]
-                # V += post_list[neuron_id][:]  # when using matrix notation
-                # V[post_list.rows[neuron_id]]+= post_list.data[neuron_id] # when using lil sparse matrix
 
                 # updating of last spike list:
                 last_spike[neuron_id] = trun
@@ -116,9 +110,9 @@ print('\nSimulation time: ' + str(end-init))
 #plot graph
 #-----------------------------------------------------------------------------
 # plt.plot(spk_t, spk_id, '.k', markersize=1.0)
-'''plt.plot(spk_t[spk_id<=N*0.8],spk_id[spk_id<=N*0.8], '.k', markersize=1.0)
+plt.plot(spk_t[spk_id<=N*0.8],spk_id[spk_id<=N*0.8], '.k', markersize=1.0)
 plt.plot(spk_t[spk_id>N*0.8],spk_id[spk_id>N*0.8], '.r', markersize=1.0)
 plt.tight_layout()
-plt.show()'''
+plt.show()
 # plt.savefig('array.png', dpi = 600)
 # plt.close()
