@@ -1,7 +1,7 @@
 #!/usr/bin/env pypy
 
 import numpy             as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from   set_params        import *
 import time
 
@@ -67,9 +67,13 @@ def evaluate(post_list):
 
                 # updating of postsynaptic currents:
                 I_syn[post_list[neuron_id][0]] += post_list[neuron_id][1]
+                # I_syn += post_list[neuron_id][:] # when using matrix notation
+                # I_syn[post_list.rows[neuron_id]] += post_list.data[neuron_id] # when using lil sparse matrix
 
                 # updating of postsynaptic potentials:
                 V[post_list[neuron_id][0]] += post_list[neuron_id][1]
+                # V += post_list[neuron_id][:]  # when using matrix notation
+                # V[post_list.rows[neuron_id]]+= post_list.data[neuron_id] # when using lil sparse matrix
 
                 # updating of last spike list:
                 last_spike[neuron_id] = trun
@@ -80,7 +84,7 @@ def evaluate(post_list):
 
             V[neuron_id] = V_reset
 
-    print(len(spk_t)/N)
+    print('\nNumber of spikes per neuron: ' + str(len(spk_t)/N))
 
     return np.array(spk_t), np.array(spk_id)
 
@@ -93,25 +97,28 @@ np.random.seed(rseed)    #seed for the random number generator
 #random network 80% excitatory and 20% inhibitory:
 #-----------------------------------------------------------------------------
 from generate_graph import *
+print('\nBuilding graph...')
+init = time.time()
 post_list = brunel_graph(N, w_ex, g, save_graph=False)
-
-# post_list = all_to_all(N, w)
+end  = time.time()
+print('...time spent: ' + str(end-init))
 
 #-----------------------------------------------------------------------------
 #running simulation
 #-----------------------------------------------------------------------------
+print('\nRunning the simulation...')
 init = time.time()
 spk_t, spk_id = evaluate(post_list)
 end  = time.time()
-print('Simulation time:' + str(end-init))
+print('\nSimulation time: ' + str(end-init))
 
 #-----------------------------------------------------------------------------
 #plot graph
 #-----------------------------------------------------------------------------
 # plt.plot(spk_t, spk_id, '.k', markersize=1.0)
-plt.plot(spk_t[spk_id<=N*0.8],spk_id[spk_id<=N*0.8], '.k', markersize=1.0)
+'''plt.plot(spk_t[spk_id<=N*0.8],spk_id[spk_id<=N*0.8], '.k', markersize=1.0)
 plt.plot(spk_t[spk_id>N*0.8],spk_id[spk_id>N*0.8], '.r', markersize=1.0)
 plt.tight_layout()
-plt.show()
+plt.show()'''
 # plt.savefig('array.png', dpi = 600)
 # plt.close()

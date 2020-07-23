@@ -9,10 +9,12 @@ t_sim  = 1000.0         # simulation time
 #############################################################################
 # Network parameters
 #############################################################################
-N     = 1000        # number of neurons
+N     = 5000        # number of neurons
 g     = 10.0         # inhibition/excitation ratio
 
-w_ex  = 80.0*0.15 # mV
+frac  = 80000.0/N**0.5
+
+w_ex  = frac*0.15 # mV
 w_in  = -g * w_ex
 delay = 1.5 #in ms
 
