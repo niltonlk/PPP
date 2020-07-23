@@ -61,7 +61,7 @@ def evaluate(post_list):
             neuron_id = np.where(unif<=phi_cumsum)[0][0]
 
             # checking refractory period
-            if last_spike[neuron_id]==0 or (trun-last_spike[neuron_id])>=delay:
+            if last_spike[neuron_id]==0 or (trun-last_spike[neuron_id])>=t_ref:
 
                 # updating of postsynaptic currents:
                 I_syn[post_list[neuron_id][0]] += post_list[neuron_id][1]
