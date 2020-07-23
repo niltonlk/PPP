@@ -40,11 +40,12 @@ def fixed_indegree(Ce, Ci, Nexct, Ninhb, W, g):
 
 def brunel_graph(N, w_ex, g, save_graph=False):
 
-	f     = 0.8         # fraction of excitatory neurons
-	Nexct = int(f * N)  # number of excitatory neurons
-	Ninhb = N-Nexct#int((1-f) * N)
-	Ce    = 1000
-	Ci    = int( Ce / 4.0 )
+	f     = 0.8         	# fraction of excitatory neurons
+	p	  = 0.1				# probability of connection
+	Nexct = int(f * N)  	# number of excitatory neurons
+	Ninhb = N-Nexct			# number of inhibitory neurons
+	Ce    = int(Nexct*p)
+	Ci    = int(Ce*0.25)
 
 	pre_idx, pos_idx, W = fixed_indegree(Ce, Ci, Nexct, Ninhb, w_ex, g)
 
