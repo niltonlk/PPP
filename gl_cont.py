@@ -14,12 +14,14 @@ import time
 
 def phi(V, gamma, r):
     V_diff = V - V_rheo
-    idx_neg = np.where(V_diff < 0)
+    idx_neg = np.where(V_diff < 0)[0]
     V_diff[idx_neg] = 0.0
-    phi_u = (np.power(gamma * V_diff, r))/100.0#*10.0
+    phi_u = (np.power(gamma * V_diff, r))
+    idx_1 = np.where(phi_u>1)[0]
+    phi_u[idx_1] = 1.0
     # Phi in kHz - divided by 0.1
     # phi_u[phi_u<0] = 0
-    return phi_u
+    return phi_u*0.05
 
 #-----------------------------------------------------------------------------
 #function to evaluate the model
@@ -30,6 +32,7 @@ def evaluate(post_list):
     phi_u = np.zeros(N)          #array to store phi values
     I_syn = np.zeros(N)          #array to store synaptic current values
     last_spike = np.zeros(N)
+    I_buffer = [[0,0,0]]         #list to store (target, weight, delay) buffer
 
     #array to store spikes
     spk_t = []
@@ -43,10 +46,29 @@ def evaluate(post_list):
         unif = np.random.rand()
         dt = -np.log(unif)/S;
 
+        # process spikes input arriving during the interval dt:
+        tmp_array = np.array(I_buffer) #create a numpy array to get index
+        #index of spikes arriving prior to the next simulation time
+        idx_input = np.where(tmp_array[:,2]<=trun+dt)[0] 
+        trun_ = trun # keep track of simulation time
+        for i in idx_input:
+            tgt, w_, d_ = I_buffer.pop(0) # extract first spike in the sorted buffer (target, weight, delay)
+            dt_ = d_ - trun_ # time step from last simulation time to current spike input
+            trun_ = d_ # keep trach of simulation time
+            # compute I
+            I_syn = I_syn*np.exp(-beta*dt_)
+            # compute V(T)
+            V = (V-V_rest)*np.exp(-alpha*dt_) + V_rest + I_ext + I_syn
+            # Add input arriving to tgt at time trun_
+            I_syn[int(tgt)] += w_
+            V[int(tgt)] += w_
+        # calculate dt from last update
+        trun += dt
+        dt_ = trun - trun_
         # compute I
-        I_syn = I_syn*np.exp(-beta*dt)
+        I_syn = I_syn*np.exp(-beta*dt_)
         #compute V(T)
-        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
+        V = (V-V_rest)*np.exp(-alpha*dt_) + V_rest + I_ext + I_syn
 
         #compute phi(T)
         phi_u = phi(V, gamma, r)
@@ -63,11 +85,12 @@ def evaluate(post_list):
             # checking refractory period
             if last_spike[neuron_id]==0 or (trun-last_spike[neuron_id])>=t_ref:
 
-                # updating of postsynaptic currents:
-                I_syn[post_list[neuron_id][0]] += post_list[neuron_id][1]
-
-                # updating of postsynaptic potentials:
-                V[post_list[neuron_id][0]] += post_list[neuron_id][1]
+                # Add spike triplet (target, weight, delay) to buffer
+                # create temporary numpy array to convert delay into arrival time
+                tmp_array = np.array(post_list[neuron_id])
+                tmp_array[:,2] += trun # increment current time to delay
+                I_buffer.extend(tmp_array.tolist()) # extend buffer
+                I_buffer.sort(key=lambda x:x[2]) # sort input buffer by delay
 
                 # updating of last spike list:
                 last_spike[neuron_id] = trun
@@ -93,7 +116,7 @@ np.random.seed(rseed)    #seed for the random number generator
 from generate_graph import *
 print('\nBuilding graph...')
 init = time.time()
-post_list = brunel_graph(N, w_ex, g, save_graph=False)
+post_list = brunel_graph(N, w_ex, g, d_ex, d_in, save_graph=False)
 end  = time.time()
 print('...time spent: ' + str(end-init))
 
