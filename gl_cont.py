@@ -18,10 +18,10 @@ def phi(V, gamma, r):
     V_diff[idx_neg] = 0.0
     phi_u = (np.power(gamma * V_diff, r))
     idx_1 = np.where(phi_u>1)[0]
-    phi_u[idx_1] = 1.0
+    # phi_u[idx_1] = 1.0
     # Phi in kHz - divided by 0.1
     # phi_u[phi_u<0] = 0
-    return phi_u*0.05
+    return phi_u*0.02
 
 #-----------------------------------------------------------------------------
 #function to evaluate the model
@@ -76,7 +76,6 @@ def evaluate(post_list):
         unif = np.random.uniform(low=0.0, high=S)
 
         S_new = np.sum(phi_u)
-        trun += dt
 
         if unif<=S_new:
             phi_cumsum = np.cumsum(phi_u)
