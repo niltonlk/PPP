@@ -49,7 +49,6 @@ def evaluate(post_list):
         V = (V-V_rest)*np.exp(-alpha*dt) \
             + I_syn*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
             + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
-        print(V)
 
         # compute I at time T
         I_syn = I_syn*np.exp(-beta*dt)
