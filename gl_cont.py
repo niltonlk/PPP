@@ -40,15 +40,21 @@ def evaluate(post_list):
         #compute phi(T-dt)
         phi_u = phi(V, gamma, r)
         S = np.sum(phi_u)
+        if S == 0: break
         unif = np.random.rand()
         dt = -np.log(unif)/S;
 
-        # compute I
-        I_syn = I_syn*np.exp(-beta*dt)
         #compute V(T)
-        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
+        # V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn #WRONG
+        V = (V-V_rest)*np.exp(-alpha*dt) \
+            + I_syn*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
+            + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
+        print(V)
 
-        #compute phi(T)
+        # compute I at time T
+        I_syn = I_syn*np.exp(-beta*dt)
+
+        #compute phi(V) at time T
         phi_u = phi(V, gamma, r)
 
         unif = np.random.uniform(low=0.0, high=S)
@@ -67,7 +73,7 @@ def evaluate(post_list):
                 I_syn[post_list[neuron_id][0]] += post_list[neuron_id][1]
 
                 # updating of postsynaptic potentials:
-                V[post_list[neuron_id][0]] += post_list[neuron_id][1]
+                # V[post_list[neuron_id][0]] += post_list[neuron_id][1]
 
                 # updating of last spike list:
                 last_spike[neuron_id] = trun
