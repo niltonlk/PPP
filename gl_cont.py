@@ -3,72 +3,78 @@ import matplotlib.pyplot as plt
 from   set_params        import *
 import time
 
-#phi function
-'''def phi(V, v_half, slope):
-    #return 1.0/(1.0+np.exp(-(V-v_half)/slope))
-    # return (1/27.07) * np.exp((V-v_half)/slope) + 1e-4
-    phi_u = slope*V#+0.1
-    phi_u[phi_u>1] = 1
-    phi_u[phi_u<0] = 0
-    return phi_u'''
-
+#############################################################################
+# Phi function
+#############################################################################
 def phi(V, gamma, r):
     V_diff = V - V_rheo
     idx_neg = np.where(V_diff < 0)[0]
     V_diff[idx_neg] = 0.0
     phi_u = (np.power(gamma * V_diff, r))
     idx_1 = np.where(phi_u>1)[0]
-    # phi_u[idx_1] = 1.0
-    # Phi in kHz - divided by 0.1
-    # phi_u[phi_u<0] = 0
-    return phi_u*0.02
+    return phi_u*0.01
 
-#-----------------------------------------------------------------------------
-#function to evaluate the model
-#-----------------------------------------------------------------------------
+#############################################################################
+# Function to evaluate the model
+#############################################################################
 def evaluate(post_list):
     #initial conditions
     V = np.random.uniform(0.0, V_rheo+1.0, size=N )
-    phi_u = np.zeros(N)          #array to store phi values
-    I_syn = np.zeros(N)          #array to store synaptic current values
-    last_spike = np.zeros(N)
-    I_buffer = [[0,0,0]]         #list to store (target, weight, delay) buffer
+    phi_u      = np.zeros(N)          # array to store phi values
+    I_syn      = np.zeros(N)          # array to store synaptic current values
+    last_spike = np.zeros(N)          # array to store last spikes for each neuron
 
-    #array to store spikes
-    spk_t = []
-    spk_id = []
+    # arrays to store data
+    spk_t = []  # spiking times
+    spk_id = [] # index of the spiking neurons
 
-    trun = 0.0
+    # spk_buffer stores the spikes that not arrived in the postsynaptic neurons yet
+    # Once it is considered, the respective spike is removed from this list
+    # Each row of this variable stores (target neuron, synaptic weigth, spiking time + delay)
+    spk_buffer = np.zeros((1,3))       # initializing with zeros
+
+    trun = 0.0  # initial time of simulation
+
+    # The simulation will run until trun < total time of simulation.
+    # If the sum of all Phi is zero, then the simulation will stop too.
     while (trun < t_sim):
+
         #compute phi(T-dt)
         phi_u = phi(V, gamma, r)
         S = np.sum(phi_u)
-        unif = np.random.rand()
-        dt = -np.log(unif)/S;
 
-        # process spikes input arriving during the interval dt:
-        tmp_array = np.array(I_buffer) #create a numpy array to get index
-        #index of spikes arriving prior to the next simulation time
-        idx_input = np.where(tmp_array[:,2]<=trun+dt)[0] 
-        trun_ = trun # keep track of simulation time
-        for i in idx_input:
-            tgt, w_, d_ = I_buffer.pop(0) # extract first spike in the sorted buffer (target, weight, delay)
-            dt_ = d_ - trun_ # time step from last simulation time to current spike input
-            trun_ = d_ # keep trach of simulation time
-            # compute I
-            I_syn = I_syn*np.exp(-beta*dt_)
-            # compute V(T)
-            V = (V-V_rest)*np.exp(-alpha*dt_) + V_rest + I_ext + I_syn
-            # Add input arriving to tgt at time trun_
-            I_syn[int(tgt)] += w_
-            V[int(tgt)] += w_
-        # calculate dt from last update
+        if S==0.0: break
+
+        # roll an uniform
+        unif = np.random.rand()
+        # find the next spiking time
+        dt   = -np.log(unif)/S;
+
+        # update running time
         trun += dt
-        dt_ = trun - trun_
-        # compute I
-        I_syn = I_syn*np.exp(-beta*dt_)
+
+        # compute spikes arrived between T-dt and T
+        spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])]
+        idx_del= np.where((spk_buffer[:,2]<=trun)&(spk_buffer[:,2]>0.0))[0]
+        spk_dt = spk_buffer[idx_del,:]
+
+        # if there is no spike between T-dt and T then update I_syn normally
+        if spk_dt.size==0:
+            # compute I
+            I_syn = I_syn*np.exp(-beta*dt)
+
+        # else compute all spikes that ocurred in this time windows and update I_syn accordingly
+        else:
+            I_buffer = np.zeros(N)
+            for id in idx_del:
+                I_buffer[spk_buffer[id,0].astype(int)] += spk_buffer[id,1]*np.exp(-beta*(trun-spk_buffer[id,2]))
+            spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
+
+            # compute I
+            I_syn = I_syn*np.exp(-beta*dt) + I_buffer
+
         #compute V(T)
-        V = (V-V_rest)*np.exp(-alpha*dt_) + V_rest + I_ext + I_syn
+        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
 
         #compute phi(T)
         phi_u = phi(V, gamma, r)
@@ -84,15 +90,12 @@ def evaluate(post_list):
             # checking refractory period
             if last_spike[neuron_id]==0 or (trun-last_spike[neuron_id])>=t_ref:
 
-                # Add spike triplet (target, weight, delay) to buffer
-                # create temporary numpy array to convert delay into arrival time
-                tmp_array = np.array(post_list[neuron_id])
-                tmp_array[:,2] += trun # increment current time to delay
-                I_buffer.extend(tmp_array.tolist()) # extend buffer
-                I_buffer.sort(key=lambda x:x[2]) # sort input buffer by delay
-
                 # updating of last spike list:
                 last_spike[neuron_id] = trun
+
+                # updating delayed spike buffer
+                tmp_array  = np.c_[post_list[neuron_id][0], post_list[neuron_id][1], trun+post_list[neuron_id][2]]
+                spk_buffer = np.r_[spk_buffer, tmp_array]
 
                 # recording spike time and neuron index:
                 spk_t.append(trun)
