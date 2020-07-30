@@ -53,6 +53,11 @@ def evaluate(post_list):
         # update running time
         trun += dt
 
+        #compute V(T)
+        V = (V-V_rest)*np.exp(-alpha*dt) \
+            + I_syn*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
+            + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
+
         # compute spikes arrived between T-dt and T
         spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])] # sort by spikes arrived first
         idx_del= np.where((spk_buffer[:,2]<=trun)&(spk_buffer[:,2]>0.0))[0] # find the index of spikes ocurred in T-dt and T
@@ -60,7 +65,7 @@ def evaluate(post_list):
 
         # if there is no spike between T-dt and T then update I_syn normally
         if spk_dt.size==0:
-            # compute I
+            # compute I(T)
             I_syn = I_syn*np.exp(-beta*dt)
 
         # else compute all spikes that ocurred in this time window and update I_syn accordingly
@@ -70,16 +75,13 @@ def evaluate(post_list):
                 I_buffer[spk_buffer[id,0].astype(int)] += spk_buffer[id,1]*np.exp(-beta*(trun-spk_buffer[id,2]))
             spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
 
-            # compute I
+            # compute I(T)
             I_syn = I_syn*np.exp(-beta*dt) + I_buffer
-
-        #compute V(T)
-        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
 
         #compute phi(T)
         phi_u = phi(V, gamma, r)
         S_new = np.sum(phi_u)
-        
+
         unif = np.random.uniform(low=0.0, high=S)
 
         if unif<=S_new:
