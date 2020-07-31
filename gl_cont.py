@@ -53,30 +53,28 @@ def evaluate(post_list):
         # update running time
         trun += dt
 
-        #compute V(T)
+        # compute V(T)
         V = (V-V_rest)*np.exp(-alpha*dt) \
             + I_syn*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
             + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
 
+        # compute I(T)
+        I_syn = I_syn*np.exp(-beta*dt)
+
         # compute spikes arrived between T-dt and T
-        spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])] # sort by spikes arrived first
+        # spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])] # sort by spikes arrived first
         idx_del= np.where((spk_buffer[:,2]<=trun)&(spk_buffer[:,2]>0.0))[0] # find the index of spikes ocurred in T-dt and T
         spk_dt = spk_buffer[idx_del,:]  # list of spikes in the time window T-dt to T
 
         # if there is no spike between T-dt and T then update I_syn normally
-        if spk_dt.size==0:
-            # compute I(T)
-            I_syn = I_syn*np.exp(-beta*dt)
-
-        # else compute all spikes that ocurred in this time window and update I_syn accordingly
-        else:
-            I_buffer = np.zeros(N)
-            for id in idx_del:
-                I_buffer[spk_buffer[id,0].astype(int)] += spk_buffer[id,1]*np.exp(-beta*(trun-spk_buffer[id,2]))
-            spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
-
-            # compute I(T)
-            I_syn = I_syn*np.exp(-beta*dt) + I_buffer
+        # compute all spikes that ocurred in this time window and update I_syn accordingly
+        # compute spikes between T-dt and T
+        for id in idx_del:
+            I_syn[spk_buffer[id,0].astype(int)] += spk_buffer[id,1]*np.exp(-beta*(trun-spk_buffer[id,2]))
+            V[spk_buffer[id,0].astype(int)]     += spk_buffer[id,1]*\
+                (np.exp(-alpha*(trun-spk_buffer[id,2]))-np.exp(-beta*(trun-spk_buffer[id,2])))/\
+                (beta-alpha)
+        spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
 
         #compute phi(T)
         phi_u = phi(V, gamma, r)
