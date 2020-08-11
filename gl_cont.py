@@ -11,7 +11,7 @@ def phi(V, gamma, r):
     idx_neg = np.where(V_diff < 0)[0]
     V_diff[idx_neg] = 0.0
     phi_u = (np.power(gamma * V_diff, r))
-    idx_1 = np.where(phi_u>1)[0]
+    # idx_1 = np.where(phi_u>1)[0]
     return phi_u*0.01
 
 #############################################################################
@@ -39,9 +39,9 @@ def evaluate(post_list):
     # If the sum of all Phi is zero, then the simulation will stop too.
     while (trun < t_sim):
 
-        #compute phi(T-dt)
+        #compute phi(V) at time (T-dt)
         phi_u = phi(V, gamma, r)
-        S = np.sum(phi_u)
+        S = np.sum(phi_u)           #sum of the rates
 
         if S==0.0: break
 
@@ -76,9 +76,9 @@ def evaluate(post_list):
                 (beta-alpha)
         spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
 
-        #compute phi(T)
+        #compute phi(V) at time T
         phi_u = phi(V, gamma, r)
-        S_new = np.sum(phi_u)
+        S_new = np.sum(phi_u) # sum of the rates
 
         unif = np.random.uniform(low=0.0, high=S)
 
