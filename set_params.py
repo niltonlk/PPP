@@ -10,7 +10,7 @@ t_sim  = 1000.0         # simulation time
 # Network parameters
 #############################################################################
 N     = 1000        # number of neurons
-g     = 10.0         # inhibition/excitation ratio
+g     = 6.0         # inhibition/excitation ratio
 
 frac  = 80000.0/N**0.5
 
@@ -51,7 +51,7 @@ beta        = beta_ex
 #############################################################################
 # External input parameters
 #############################################################################
-I_ext       = 100.0 # constant current in (pA)
+I_ext       = 10.0 # constant current in (pA)
 
 #############################################################################
 # Poisson background parameters
