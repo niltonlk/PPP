@@ -16,14 +16,14 @@ def phi(V, gamma, r):
     V_diff = V - V_rheo
     idx_neg = np.where(V_diff < 0)
     V_diff[idx_neg] = 0.0
-    phi_u = (np.power(gamma * V_diff, r))/100.0#*10.0
+    phi_u = (np.power(gamma * V_diff, r))/100.0
     # Phi in kHz - divided by 0.1
     # phi_u[phi_u<0] = 0
     return phi_u
 
 def phi_single(V, gamma, r):
     V_diff = V - V_rheo
-    phi_u = (np.power(gamma * V_diff, r))/100.0#*10.0
+    phi_u = (np.power(gamma * V_diff, r))/100.0
     if phi_u<0: phi_u = 0.0
     return phi_u
 
@@ -35,8 +35,9 @@ def evaluate(post_list):
     V = np.random.uniform(0.0, V_rheo+1.0, size=N )
     phi_u = np.zeros(N)         # array to store phi values
     I_syn = np.zeros(N)         # array to store synaptic current values
-    last_spike = np.zeros(N)    # array to store the last spike for each neuron
-    next_spike = np.zeros(N)    # array to store the possible next spike for each neuron
+    last_spike  = np.zeros(N)    # array to store the last spike for each neuron
+    next_spike  = np.zeros(N)    # array to store the possible next spike for each neuron
+    last_update = np.zeros(N)    # array to store the last update for each neuron
 
     #array to store spikes
     spk_t = []
@@ -52,7 +53,7 @@ def evaluate(post_list):
 
     # play uniform to find next spikes
     nonzero_phi_id = np.nonzero(phi_u)
-    next_spike[nonzero_phi_id] = trun + np.random.rand(len(nonzero_phi_id))/phi_u[nonzero_phi_id]
+    next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id))/phi_u[nonzero_phi_id])
 
     while (trun < t_sim):
 
@@ -60,14 +61,22 @@ def evaluate(post_list):
         id_min = np.argmin(next_spike)
         dt = next_spike[id_min] - trun
 
-        # compute phi(T-dt) of spiking neuron candidate (neuron i)
+        # compute phi(T-dt) of spiking neuron candidate (neuron i) and play uniform
         unif = np.random.uniform(low=0.0, high=phi_u[id_min])
 
         # update clock time
         trun += dt
 
-        # time spent since last spike
-        delta_spk = trun - last_spike[post_list[id_min][0]]
+        # save the update time for neuron i
+        last_update[id_min] = trun
+
+        #compute V(T) of neuron i
+        V[id_min] = (V[id_min]-V_rest)*np.exp(-alpha*dt) \
+            + I_syn[id_min]*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
+            + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
+
+        # compute I(T) of neuron i
+        I_syn[id_min] = I_syn[id_min]*np.exp(-beta*dt)
 
         # compute phi(V) at time T of neuron i
         phi_u[id_min] = phi_single(V[id_min], gamma, r)
@@ -76,17 +85,22 @@ def evaluate(post_list):
             # record spike time and neuron index:
             spk_t.append(trun)
             spk_id.append(id_min)
-            
-            #compute V(T) of receiving neurons
-            V[post_list[id_min][0]] = (V[post_list[id_min][0]]-V_rest)*np.exp(-alpha*delta_spk) \
-                + I_syn[post_list[id_min][0]]*np.exp(-beta*delta_spk)*(np.exp((beta-alpha)*delta_spk)-1)/(beta-alpha) \
-                + I_ext*np.exp(-beta*delta_spk)*(np.exp((beta)*delta_spk)-1)/(beta)
 
-            # compute I at time T of neuron i
+            # time spent since last update
+            dt = trun - last_update[post_list[id_min][0]]
+
+            #compute V(T) of receiving neurons
+            V[post_list[id_min][0]] = (V[post_list[id_min][0]]-V_rest)*np.exp(-alpha*dt) \
+                + I_syn[post_list[id_min][0]]*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
+                + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)
+
+            # compute I(T) of receiving neurons
             I_syn[post_list[id_min][0]] = I_syn[post_list[id_min][0]]*np.exp(-beta*dt) + post_list[id_min][1]
 
             # reset V(T) of neuron who spiked
             V[id_min] = V_reset
+            # update phi(V) at time T of neuron who spiked
+            phi_u[id_min] = phi_single(V[id_min], gamma, r)
 
             # update next spike of the actual neuron who is spiking
             next_spike[id_min] = t_sim
@@ -95,19 +109,20 @@ def evaluate(post_list):
             phi_u[post_list[id_min][0]] = phi(V[post_list[id_min][0]], gamma, r)
 
             # update next spike of target neurons
-            next_spike[post_list[id_min][0]] = trun + np.random.rand(len(post_list[id_min][0]))/phi_u[post_list[id_min][0]]
+            nonzero_phi_id = post_list[id_min][0][phi_u[post_list[id_min][0]]>0.0]  # nonzero elements index
+            zero_phi_id    = post_list[id_min][0][phi_u[post_list[id_min][0]]==0.0] # zero elements index
+            next_spike[zero_phi_id]    = t_sim  # neuron with rate equals zero will spike at infinity (t_sim for the simulation)
+            next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id))/phi_u[nonzero_phi_id])
+
+            print(next_spike[nonzero_phi_id])
+
+            # save the update time for neuron i
+            last_update[post_list[id_min][0]] = trun
 
         else:
-            #compute V(T) of receiving neurons
-            V[id_min] = (V[id_min]-V_rest)*np.exp(-alpha*delta_spk) \
-                + I_syn[id_min]*np.exp(-beta*delta_spk)*(np.exp((beta-alpha)*delta_spk)-1)/(beta-alpha) \
-                + I_ext*np.exp(-beta*delta_spk)*(np.exp((beta)*delta_spk)-1)/(beta)
-
-            # compute I at time T of neuron i
-            I_syn[id_min] = I_syn[id_min]*np.exp(-beta*dt)
-
             # update next spike of neuron i
-            next_spike[id_min] = trun + np.random.rand()/phi_u[id_min]
+            if phi_u[id_min]>0.0: next_spike[id_min] = trun - np.log(np.random.rand()/phi_u[id_min])
+            else: next_spike[id_min] = t_sim
 
     print('\nNumber of spikes per neuron: ' + str(len(spk_t)/N))
 
