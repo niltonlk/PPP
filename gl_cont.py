@@ -39,11 +39,44 @@ def evaluate(post_list):
     # If the sum of all Phi is zero, then the simulation will stop too.
     while (trun < t_sim):
 
-        #compute phi(V) at time (T-dt)
-        phi_u = phi(V, gamma, r)
-        S = np.sum(phi_u)           #sum of the rates
+        # compute spikes arrived from (T-dt) on
+        spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])] # sort by spikes arrived first
+        idx_del= np.where((spk_buffer[:,2]>0.0))[0] # find the index of spikes ocurred in T-dt and t_sim (end of simulation)
 
-        if S==0.0: break
+        if len(idx_del)>0:
+            S_aux = []
+            trun_ = trun
+            V_ = V
+            I_syn_ = I_syn
+            # compute spikes between T-dt and t_sim (end of simulation)
+            for id in idx_del:
+                #compute phi(V) at time (T-dt)
+                phi_u = phi(V, gamma, r)
+                S = np.sum(phi_u)           #sum of the rates
+                S_aux.append(S)
+
+                dt_ = spk_buffer[id,2]-trun_
+
+                # compute V(T)
+                V_ = (V_-V_rest)*np.exp(-alpha*dt_) \
+                    + I_syn_*np.exp(-beta*dt_)*(np.exp((beta-alpha)*dt_)-1)/(beta-alpha) \
+                    + I_ext*np.exp(-beta*dt_)*(np.exp((beta)*dt_)-1)/(beta)
+
+                # compute I(T)
+                I_syn_ = I_syn*np.exp(-beta*dt_)
+
+                # update postsynaptic current
+                I_syn_[spk_buffer[id,0].astype(int)] += spk_buffer[id,1]*np.exp(-beta*(dt_))
+
+                trun_ += dt_
+
+            S = np.max(S_aux)
+
+        else:
+            phi_u = phi(V, gamma, r)
+            S = np.sum(phi_u)           #sum of the rates
+
+            if S==0.0: break
 
         # roll an uniform
         unif = np.random.rand()
