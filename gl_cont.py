@@ -23,8 +23,8 @@ def phi(V, gamma, r):
 
 def phi_single(V, gamma, r):
     V_diff = V - V_rheo
+    if V_diff<0: V_diff = 0.0
     phi_u = (np.power(gamma * V_diff, r))/100.0
-    if phi_u<0: phi_u = 0.0
     return phi_u
 
 #-----------------------------------------------------------------------------
@@ -53,19 +53,19 @@ def evaluate(post_list):
 
     # play uniform to find next spikes
     nonzero_phi_id = np.nonzero(phi_u)
-    next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id))/phi_u[nonzero_phi_id])
+    next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id)))/phi_u[nonzero_phi_id]
 
     while (trun < t_sim):
 
         # find next spike time and neuron index
         id_min = np.argmin(next_spike)
-        dt = next_spike[id_min] - trun
+        dt = next_spike[id_min] - last_update[id_min]
 
         # compute phi(T-dt) of spiking neuron candidate (neuron i) and play uniform
         unif = np.random.uniform(low=0.0, high=phi_u[id_min])
 
         # update clock time
-        trun += dt
+        trun = next_spike[id_min]
 
         # save the update time for neuron i
         last_update[id_min] = trun
@@ -112,17 +112,17 @@ def evaluate(post_list):
             nonzero_phi_id = post_list[id_min][0][phi_u[post_list[id_min][0]]>0.0]  # nonzero elements index
             zero_phi_id    = post_list[id_min][0][phi_u[post_list[id_min][0]]==0.0] # zero elements index
             next_spike[zero_phi_id]    = t_sim  # neuron with rate equals zero will spike at infinity (t_sim for the simulation)
-            next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id))/phi_u[nonzero_phi_id])
-
-            print(next_spike[nonzero_phi_id])
+            next_spike[nonzero_phi_id] = trun - np.log(np.random.rand(len(nonzero_phi_id)))/phi_u[nonzero_phi_id]
 
             # save the update time for neuron i
             last_update[post_list[id_min][0]] = trun
 
         else:
             # update next spike of neuron i
-            if phi_u[id_min]>0.0: next_spike[id_min] = trun - np.log(np.random.rand()/phi_u[id_min])
-            else: next_spike[id_min] = t_sim
+            if phi_u[id_min]>0.0:
+                next_spike[id_min] = trun - np.log(np.random.rand())/phi_u[id_min]
+            else:
+                next_spike[id_min] = t_sim
 
     print('\nNumber of spikes per neuron: ' + str(len(spk_t)/N))
 
