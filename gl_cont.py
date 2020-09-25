@@ -35,6 +35,8 @@ def evaluate(post_list):
 
     trun = 0.0  # initial time of simulation
 
+    size_buffer = []
+
     # The simulation will run until trun < total time of simulation.
     # If the sum of all Phi is zero, then the simulation will stop too.
     while (trun < t_sim):
@@ -42,6 +44,8 @@ def evaluate(post_list):
         # compute spikes arrived from (T-dt) on
         spk_buffer = spk_buffer[np.argsort(spk_buffer[:,2])] # sort by spikes arrived first
         idx_del= np.where((spk_buffer[:,2]>0.0))[0] # find the index of spikes ocurred in T-dt and t_sim (end of simulation)
+
+        size_buffer.append(len(spk_buffer))
 
         if len(idx_del)>0:
             S_aux = []
@@ -137,7 +141,7 @@ def evaluate(post_list):
 
     print('\nNumber of spikes per neuron: ' + str(len(spk_t)/N))
 
-    return np.array(spk_t), np.array(spk_id)
+    return np.array(spk_t), np.array(spk_id), size_buffer
 
 #-----------------------------------------------------------------------------
 #parameters
@@ -159,7 +163,7 @@ print('...time spent: ' + str(end-init))
 #-----------------------------------------------------------------------------
 print('\nRunning the simulation...')
 init = time.time()
-spk_t, spk_id = evaluate(post_list)
+spk_t, spk_id, size_buffer = evaluate(post_list)
 end  = time.time()
 print('\nSimulation time: ' + str(end-init))
 
