@@ -103,7 +103,10 @@ def evaluate(post_list):
             phi_u[id_min] = phi_single(V[id_min], gamma, r)
 
             # update next spike of the actual neuron who is spiking
-            next_spike[id_min] = t_sim
+            if phi_u[id_min]>0.0:
+                next_spike[id_min] = trun - np.log(np.random.rand())/phi_u[id_min]
+            else:
+                next_spike[id_min] = t_sim
 
             # compute phi(V) at time T of the receiving neurons
             phi_u[post_list[id_min][0]] = phi(V[post_list[id_min][0]], gamma, r)
