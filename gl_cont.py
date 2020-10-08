@@ -79,7 +79,8 @@ def evaluate(post_list):
         I_syn[id_min] = I_syn[id_min]*np.exp(-beta*dt)
 
         # compute phi(V) at time T of neuron i
-        phi_u[id_min] = phi_single(V[id_min], gamma, r)
+        # phi_u[id_min] = phi_single(V[id_min], gamma, r)   # it works with delta synapses
+        phi_u[id_min] = phi_single(V[id_min]+I_syn[id_min]/(beta-alpha), gamma, r)
 
         if unif <= phi_u[id_min]:
             # record spike time and neuron index:
@@ -100,7 +101,8 @@ def evaluate(post_list):
             # reset V(T) of neuron who spiked
             V[id_min] = V_reset
             # update phi(V) at time T of neuron who spiked
-            phi_u[id_min] = phi_single(V[id_min], gamma, r)
+            # phi_u[id_min] = phi_single(V[id_min], gamma, r) # it works for delta synapses
+            phi_u[id_min] = phi_single(V[id_min]+I_syn[id_min]/(beta-alpha), gamma, r)
 
             # update next spike of the actual neuron who is spiking
             if phi_u[id_min]>0.0:
@@ -109,7 +111,8 @@ def evaluate(post_list):
                 next_spike[id_min] = t_sim
 
             # compute phi(V) at time T of the receiving neurons
-            phi_u[post_list[id_min][0]] = phi(V[post_list[id_min][0]], gamma, r)
+            # phi_u[post_list[id_min][0]] = phi(V[post_list[id_min][0]], gamma, r)  # it works for delta synapses
+            phi_u[post_list[id_min][0]] = phi(V[post_list[id_min][0]]+I_syn[post_list[id_min][0]]/(beta-alpha), gamma, r)
 
             # update next spike of target neurons
             nonzero_phi_id = post_list[id_min][0][phi_u[post_list[id_min][0]]>0.0]  # nonzero elements index
