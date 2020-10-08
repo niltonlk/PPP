@@ -55,7 +55,9 @@ def evaluate(post_list):
             # compute spikes between T-dt and t_sim (end of simulation)
             for id in idx_del:
                 #compute phi(V) at time (T-dt)
-                phi_u = phi(V, gamma, r)
+                phi_u = phi(V_+I_syn_/(beta-alpha), gamma, r)
+                # phi_u = phi(V, gamma, r)
+
                 S = np.sum(phi_u)           #sum of the rates
                 S_aux.append(S)
 
