@@ -55,7 +55,10 @@ def evaluate(post_list):
             # compute spikes between T-dt and t_sim (end of simulation)
             for id in idx_del:
                 #compute phi(V) at time (T-dt)
-                phi_u = phi(V_+I_syn_/(beta-alpha), gamma, r)
+                Iaux_id = I_syn_>0.0
+                phi_u[Iaux_id] = phi(V_[Iaux_id]+I_syn_[Iaux_id]/(beta-alpha), gamma, r)
+                phi_u[~Iaux_id] = phi(V_[~Iaux_id], gamma, r)
+
                 # phi_u = phi(V, gamma, r)
 
                 S = np.sum(phi_u)           #sum of the rates
@@ -79,7 +82,10 @@ def evaluate(post_list):
             S = np.max(S_aux)
 
         else:
-            phi_u = phi(V, gamma, r)
+            Iaux_id = I_syn>0.0
+            phi_u[Iaux_id] = phi(V[Iaux_id]+I_syn[Iaux_id]/(beta-alpha), gamma, r)
+            phi_u[~Iaux_id] = phi(V[~Iaux_id], gamma, r)
+            # phi_u = phi(V, gamma, r)
             S = np.sum(phi_u)           #sum of the rates
 
             if S==0.0: break
@@ -116,7 +122,10 @@ def evaluate(post_list):
         spk_buffer = np.delete(spk_buffer, obj=idx_del, axis=0)
 
         #compute phi(V) at time T
-        phi_u = phi(V, gamma, r)
+        Iaux_id = I_syn>0.0
+        phi_u[Iaux_id] = phi(V[Iaux_id]+I_syn[Iaux_id]/(beta-alpha), gamma, r)
+        phi_u[~Iaux_id] = phi(V[~Iaux_id], gamma, r)
+        # phi_u = phi(V, gamma, r)
         S_new = np.sum(phi_u) # sum of the rates
 
         unif = np.random.uniform(low=0.0, high=S)
