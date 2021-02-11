@@ -61,7 +61,7 @@ def evaluate(post_list):
         last_update[id_min] = trun
 
         #compute V(T) of neuron i
-        V[id_min] = (V[id_min]-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext
+        V[id_min] = (V[id_min]-V_rest-I_ext)*np.exp(-alpha*dt) + V_rest + I_ext
 
         # compute phi(V) at time T of neuron i
         phi_u[id_min] = phi_single(V[id_min], gamma, r)   # it works with delta synapses
@@ -75,7 +75,7 @@ def evaluate(post_list):
             dt = trun - last_update[post_list[id_min][0]]
 
             #compute V(T) of receiving neurons plus the synaptic weight coming from the presynaptic neuron
-            V[post_list[id_min][0]] = (V[post_list[id_min][0]]-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + post_list[id_min][1]
+            V[post_list[id_min][0]] = (V[post_list[id_min][0]]-V_rest-I_ext)*np.exp(-alpha*dt) + V_rest + I_ext + post_list[id_min][1]
 
             # reset V(T) of neuron who spiked
             V[id_min] = V_reset

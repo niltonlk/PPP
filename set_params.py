@@ -1,8 +1,8 @@
 #############################################################################
 # Simulation parameters
 #############################################################################
-rseed = 1           # random generator seed
-t_sim  = 1000.0         # simulation time
+rseed  = 1000           # random generator seed
+t_sim  = 5000.0         # simulation time
 
 # sim_params = {'t_sim': t_sim}
 

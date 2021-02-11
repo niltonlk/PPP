@@ -39,7 +39,6 @@ def evaluate(post_list):
         dt = -np.log(unif)/S;
 
         #compute V(T)
-        # V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn #WRONG
         V = (V-V_rest)*np.exp(-alpha*dt) \
             + I_syn*np.exp(-beta*dt)*(np.exp((beta-alpha)*dt)-1)/(beta-alpha) \
             + I_ext*np.exp(-beta*dt)*(np.exp((beta)*dt)-1)/(beta)

@@ -16,3 +16,5 @@ The two codes below update the whole state variables of the network each time an
 The next two codes instead of updating all variables of the system it only updates the neuron who is spiking and the list of postsynaptic neurons connected to this one.
 *  **gl_optimized_delta.py:** Script to run the network with GL neurons with refractory time and connected by delta synapses.
 *  **gl_optimized_expsyn_.py:** Script to run the network with GL neurons with refractory time and connected by synapses with exponential decay.
+
+The codes with synaptic delay were not added here yet.

@@ -8,7 +8,7 @@ def phi(V, gamma, r):
     V_diff = V - V_rheo
     idx_neg = np.where(V_diff < 0)
     V_diff[idx_neg] = 0.0
-    phi_u = (np.power(gamma * V_diff, r))/100.0#*10.0
+    phi_u = (np.power(gamma * V_diff, r))/100.0
     return phi_u
 
 #-----------------------------------------------------------------------------
@@ -18,7 +18,6 @@ def evaluate(post_list):
     #initial conditions
     V = np.random.uniform(0.0, V_rheo+1.0, size=N )
     phi_u = np.zeros(N)          #array to store phi values
-    I_syn = np.zeros(N)          #array to store synaptic current values
     last_spike = np.zeros(N)
 
     #array to store spikes
@@ -35,7 +34,7 @@ def evaluate(post_list):
         dt = -np.log(unif)/S;
 
         #compute V(T)
-        V = (V-V_rest)*np.exp(-alpha*dt) + V_rest + I_ext + I_syn
+        V = (V-V_rest-I_ext)*np.exp(-alpha*dt) + V_rest + I_ext
 
         #compute phi(V) at time T
         phi_u = phi(V, gamma, r) # it works with delta synapses
