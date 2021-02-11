@@ -18,3 +18,11 @@ The next two codes instead of updating all variables of the system it only updat
 *  **gl_optimized_expsyn_.py:** Script to run the network with GL neurons with refractory time and connected by synapses with exponential decay.
 
 The codes with synaptic delay were not added here yet.
+
+## Instructions
+
+To run the codes, first set the network parameters in *set_params.py* and then simply run the script you want (e.g. *gl_delta_refrac.py*) with Python:
+
+```
+python gl_delta_refrac.py
+```
